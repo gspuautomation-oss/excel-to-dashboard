@@ -1,0 +1,6 @@
+{
+  "name": "GSPU Financial Analytics",
+  "description": "TallyPrime-powered Financial Reporting, Accounting Analysis, Audit Intelligence, GST Reconciliation and Management Information System.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

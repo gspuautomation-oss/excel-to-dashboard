@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-serif: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #F4F7FB;
+    color: #0B2540;
+    overflow-x: hidden;
+  }
+
+  .font-serif-luxury {
+    font-family: var(--font-serif);
+  }
+
+  .font-mono,
+  .tabular-nums {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@keyframes gspuWaveSlow {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scaleY(1);
+  }
+  50% {
+    transform: translate3d(-12px, 6px, 0) scaleY(1.025);
+  }
+}
+
+@keyframes gspuWaveReverse {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scaleY(1);
+  }
+  50% {
+    transform: translate3d(14px, -5px, 0) scaleY(1.02);
+  }
+}
+
+@keyframes gspuButtonGlow {
+  0%, 100% {
+    box-shadow: 0 12px 32px -4px rgba(8, 103, 245, 0.45), 0 4px 12px -2px rgba(0, 48, 135, 0.3);
+  }
+  50% {
+    box-shadow: 0 16px 42px 0px rgba(85, 200, 245, 0.6), 0 6px 18px -2px rgba(8, 103, 245, 0.45);
+  }
+}
+
+.animate-gspu-wave-slow {
+  animation: gspuWaveSlow 11s ease-in-out infinite;
+}
+
+.animate-gspu-wave-reverse {
+  animation: gspuWaveReverse 14s ease-in-out infinite;
+}
+
+.animate-gspu-btn-glow {
+  animation: gspuButtonGlow 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-gspu-wave-slow,
+  .animate-gspu-wave-reverse,
+  .animate-gspu-btn-glow {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background-color: #FFFFFF !important;
+  }
+  .print-page-break {
+    page-break-after: always;
+  }
+}

@@ -1,0 +1,1408 @@
+# GSPU FINANCIAL ANALYTICS
+## MASTER IMPLEMENTATION PROMPT — VERSION 2.0
+
+### PROJECT OBJECTIVE
+
+Upgrade my existing GSPU Financial Analytics application into a professional TallyPrime-powered Financial Reporting, Accounting Analysis, Audit Intelligence, GST Reconciliation and Management Information System.
+
+This is an enhancement of the existing React web application, NOT a new application.
+
+**Preserve the existing application, its GSPU logo, design, components, charts, upload system and working features.**
+
+Add the eight advanced modules described below and integrate them into one cohesive application.
+
+The application must operate entirely with uploaded accounting and GST files, using deterministic accounting calculations.
+
+Do not use AI-generated figures, fabricated data, or placeholder calculations in actual client dashboards.
+
+### NON-NEGOTIABLE CONDITIONS
+
+1. No client login.
+2. No admin login.
+3. No registration or passwords.
+4. No client or admin portal.
+5. No paid API requirements.
+6. No mandatory cloud database.
+7. No backend requirement.
+8. All uploaded files must be processed locally inside the browser.
+9. Maintain compatibility with free static hosting on Cloudflare Pages.
+10. Preserve the GSPU branding and uploaded company name.
+11. Accept multiple XML and Excel files for one company.
+12. Allow additional files without deleting previous uploads.
+13. Provide an explicit VIEW DASHBOARD button after file uploads.
+14. All financial values must be calculated deterministically.
+15. All figures must be traceable to their original uploaded records.
+16. Do not silently ignore invalid or unsupported uploaded data.
+17. Clearly distinguish reconciled results, exceptions and insufficient information.
+
+---
+
+# PART A — APPLICATION STRUCTURE
+
+## A1. SIMPLE USER WORKFLOW
+
+The application should follow exactly this sequence:
+
+STEP 1 — ENTER COMPANY NAME
+
+Show the field:
+
+"Company / Client Name"
+
+Allow manual company-name entry.
+
+Extract company names from uploaded files where available and alert the user if inconsistent names are detected.
+
+Do not automatically combine different companies.
+
+STEP 2 — UPLOAD ACCOUNTING FILES
+
+Show one large drag-and-drop upload component.
+
+Supported accounting formats:
+
+- XML
+- XLSX
+- XLS
+- CSV
+
+Allow multiple uploads in any order.
+
+Example:
+
+- Masters.xml
+- Transactions.xml
+- TrialBalance.xlsx
+- ProfitLoss.xlsx
+- BalanceSheet.xlsx
+- Outstanding.xml
+- SalesRegister.xlsx
+- PurchaseRegister.xlsx
+
+All files should belong to the same company.
+
+Do not delete previously accepted uploads when new files are added.
+
+STEP 3 — VIEW UPLOADED FILES
+
+Display an uploaded-file table showing:
+
+- Filename
+- Format
+- File size
+- Detected report type
+- Reporting period
+- Records extracted
+- Import status
+- Preview
+- Remove
+- Replace
+
+Show validation warnings and processing failures.
+
+STEP 4 — VIEW DASHBOARD
+
+Display one prominent button:
+
+VIEW DASHBOARD
+
+The button becomes enabled after at least one supported file is successfully imported.
+
+When clicked:
+
+- Validate all uploaded files.
+- Resolve ledger mappings.
+- Identify duplicate and overlapping datasets.
+- Build the consolidated accounting model.
+- Calculate available financial results.
+- Display all available dashboards.
+
+If some modules lack supporting data, show the valid modules and explain which additional reports are needed.
+
+STEP 5 — ADD MORE FILES
+
+Display an Add More Files button inside the dashboard.
+
+Allow adding extra XML or Excel files.
+
+Display UPDATE DASHBOARD after successful additional uploads.
+
+Recalculate affected results without double-counting existing records.
+
+STEP 6 — DOWNLOAD REPORTS
+
+Allow exporting supported results as PDF and Excel.
+
+---
+
+# PART B — CORE ACCOUNTING DATA ENGINE
+
+This engine is the foundation of all eight modules.
+
+## B1. XML PARSING
+
+Support genuine TallyPrime XML structures, including:
+
+- ENVELOPE
+- HEADER
+- BODY
+- TALLYMESSAGE
+- LEDGER
+- GROUP
+- VOUCHER
+- STOCKITEM
+- ALLLEDGERENTRIES.LIST
+- LEDGERENTRIES.LIST
+- INVENTORYENTRIES.LIST
+- BILLALLOCATIONS.LIST
+- COSTCENTREALLOCATIONS.LIST
+
+Support alternate structures and custom report XML formats using detection and manual mapping.
+
+Preserve voucher metadata, source identifiers, ledger names, dates, amounts, narrations and GST information.
+
+Handle Tally amount sign conventions carefully and verify them with actual test records.
+
+Prevent unsafe XML entity processing and external-resource requests.
+
+## B2. EXCEL PARSING
+
+Read:
+
+- Multiple worksheets
+- Merged headings
+- Report title rows
+- Debit and credit columns
+- Opening and closing balances
+- Indian date formats
+- Grouped ledger accounts
+- Transaction registers
+- GST reports
+- Bill-level reports
+
+Provide a mapping screen when the format cannot be identified reliably.
+
+## B3. NORMALISED ACCOUNTING MODEL
+
+Create TypeScript types and data structures for:
+
+- Company
+- Financial period
+- Ledger
+- Ledger group
+- Account classification
+- Voucher
+- Voucher entry
+- Voucher type
+- Bill allocation
+- Outstanding invoice
+- Stock item
+- Inventory movement
+- GST invoice
+- GST return record
+- Reconciliation exception
+- Source file
+- Import validation result
+
+Every imported record must preserve source provenance.
+
+Each displayed financial metric must be traceable to its underlying accounting records.
+
+## B4. DEDUPLICATION AND RECONCILIATION
+
+Do not simply add balances or transactions from every file.
+
+Use transaction exports as the primary voucher source when complete.
+
+Use Trial Balance and financial statement exports to reconcile computed balances.
+
+Treat sales and purchase registers as supplementary or independent sources requiring mapping and reconciliation.
+
+Use stable source identifiers where available, such as Tally voucher GUID or master identifiers.
+
+Fallback matching may use company, voucher type, voucher number, date, amount and party, but ambiguous matches must be flagged rather than automatically deleted.
+
+Separate exact duplicates from suspected duplicates.
+
+Support replacement of an existing reporting period without accidental double-counting.
+
+Define a clear precedence policy for overlapping reports.
+
+Store numerical amounts in paise using integer-safe values or an appropriate decimal library. Do not accumulate financial amounts using imprecise binary floating-point arithmetic.
+
+---
+
+# MODULE 1 — ACCOUNTING HEALTH CHECK
+
+Create a new dashboard section named:
+
+ACCOUNTING HEALTH CHECK
+
+### 1.1 SUMMARY CARDS
+
+Display:
+
+- Total vouchers analysed
+- Total ledgers analysed
+- Total accounting exceptions
+- High-priority exceptions
+- Medium-priority exceptions
+- Low-priority exceptions
+- Unbalanced vouchers
+- Potential duplicate vouchers
+- Reconciliation differences
+
+### 1.2 AUDIT EXCEPTION RULES
+
+Create deterministic detection rules for:
+
+A. Duplicate vouchers
+
+Identify transactions sharing significant matching characteristics, such as date, voucher number, party, ledger combinations and amounts.
+
+Classify results as exact duplicates or possible duplicates.
+
+B. Unbalanced vouchers
+
+Verify that total debits equal total credits within configurable rounding tolerance.
+
+C. Negative cash balance
+
+Identify dates where reconstructed cash-book balances become negative, provided opening balances and complete transactions exist.
+
+D. Missing ledger classification
+
+Identify ledgers that cannot be mapped to reporting categories.
+
+E. Unusual journal entries
+
+Flag transactions exceeding configurable materiality thresholds or matching risk patterns.
+
+F. Round-amount transactions
+
+Identify unusually large round-number entries as review indicators.
+
+G. Suspense accounts
+
+Highlight outstanding suspense balances and abnormal movements.
+
+H. Period-end adjustments
+
+Identify large or unusual entries near the closing date.
+
+I. Opening and closing balance differences
+
+Compare reconstructed balances against imported Trial Balance figures.
+
+J. Missing transaction references
+
+Flag missing voucher identifiers or required reference fields.
+
+### 1.3 EXCEPTION TABLE
+
+Columns:
+
+- Date
+- Voucher number
+- Voucher type
+- Ledger
+- Party
+- Amount
+- Exception category
+- Severity
+- Explanation
+- Source file
+- View voucher
+
+Allow filtering by issue, date, amount and severity.
+
+Provide reviewer notes and the ability to mark findings as reviewed, without modifying original accounting records.
+
+### 1.4 HEALTH SCORE
+
+Optionally calculate a configurable rule-based accounting data quality score.
+
+This score must be explainable.
+
+Display the contributing factors and weights.
+
+Never describe a score as proof of fraud, audit assurance or accounting accuracy.
+
+### 1.5 EXPORT
+
+Allow downloading an Accounting Health Check report containing:
+
+- Executive summary
+- Identified exceptions
+- Severity analysis
+- Affected vouchers
+- Reconciliation differences
+- Recommended review procedures
+
+---
+
+# MODULE 2 — DEBTORS AND CREDITORS AGEING
+
+Create a section named:
+
+RECEIVABLES & PAYABLES ANALYSIS
+
+### 2.1 SUMMARY CARDS
+
+Display:
+
+- Total trade receivables
+- Total trade payables
+- Overdue receivables
+- Overdue payables
+- Customers with overdue balances
+- Suppliers with overdue balances
+- Average collection period
+- Average payment period
+
+Calculate average collection/payment periods only when sufficiently complete supporting data is available.
+
+### 2.2 AGEING BUCKETS
+
+Use configurable ageing buckets:
+
+- Not due
+- 1–30 days overdue
+- 31–60 days overdue
+- 61–90 days overdue
+- 91–180 days overdue
+- Over 180 days overdue
+
+Include an option to switch between invoice-age and due-date-based ageing.
+
+Use actual unpaid bill allocations and due dates where available.
+
+Do not infer invoice-level ageing solely from ledger closing balances.
+
+### 2.3 CUSTOMER ANALYSIS
+
+Display:
+
+- Customer name
+- Total outstanding
+- Overdue outstanding
+- Current outstanding
+- Oldest unpaid invoice
+- Number of open invoices
+- Days overdue
+- Percentage of total receivables
+
+### 2.4 SUPPLIER ANALYSIS
+
+Provide equivalent information for creditors and suppliers.
+
+### 2.5 INTERACTIVE CHARTS
+
+Create:
+
+- Receivables ageing bar chart
+- Payables ageing bar chart
+- Top 10 overdue customers
+- Top 10 suppliers by outstanding
+- Monthly collections trend
+- Monthly payment trend
+
+### 2.6 DRILL-DOWN
+
+Clicking on a customer should open:
+
+Customer → Outstanding invoices → Bill allocations → Related voucher entries.
+
+Show invoice date, due date, original amount, adjustments and residual amount.
+
+Do not assume partial payments were applied to specific invoices unless bill allocations establish this relationship.
+
+### 2.7 EXPORT
+
+Provide:
+
+- Customer ageing Excel
+- Supplier ageing Excel
+- Overdue collection list
+- Receivables summary PDF
+- Payables summary PDF
+
+---
+
+# MODULE 3 — COMPARATIVE FINANCIAL STATEMENTS
+
+Create a new section named:
+
+COMPARATIVE FINANCIAL ANALYSIS
+
+### 3.1 COMPARISON OPTIONS
+
+Allow:
+
+- Current month vs previous month
+- Current quarter vs previous quarter
+- Current financial year vs previous financial year
+- Year-to-date vs previous year-to-date
+- Custom date range vs comparable period
+
+Use the Indian financial-year default of 1 April to 31 March, but make it configurable.
+
+### 3.2 COMPARATIVE PROFIT AND LOSS
+
+Show:
+
+- Sales
+- Other operating income
+- Other income
+- Cost of goods sold
+- Direct expenses
+- Gross profit
+- Employee expenses
+- Administrative expenses
+- Selling expenses
+- Finance costs
+- Depreciation
+- Profit before tax
+- Tax expense
+- Profit after tax
+
+Display figures only where supporting ledger classifications are available.
+
+### 3.3 COMPARATIVE BALANCE SHEET
+
+Show:
+
+- Non-current assets
+- Current assets
+- Equity
+- Non-current liabilities
+- Current liabilities
+- Total assets
+- Total equity and liabilities
+
+### 3.4 VARIANCE ANALYSIS
+
+For each line item calculate:
+
+- Current period amount
+- Previous period amount
+- Absolute difference
+- Percentage difference
+
+Percentage changes with zero or unsuitable denominators should be labelled appropriately, not shown as misleading percentages.
+
+### 3.5 CHARTS
+
+Provide:
+
+- Revenue comparisons
+- Gross profit trend
+- Net profit trend
+- Expense category trends
+- Asset growth
+- Liability movement
+- Working capital trend
+
+Allow drill-down from each statement line into ledgers and underlying transactions.
+
+### 3.6 ACCOUNTING CONTROLS
+
+Show the period and source coverage for every comparison.
+
+Avoid comparing a complete year with an incomplete year without prominently identifying the mismatch.
+
+---
+
+# MODULE 4 — LEDGER AND VOUCHER DRILL-DOWN
+
+Implement drill-down throughout the entire application.
+
+### 4.1 CLICKABLE DASHBOARD VALUES
+
+When a user clicks:
+
+- Sales
+- Purchases
+- Gross profit
+- Expenses
+- Cash
+- Bank
+- Receivables
+- Payables
+- Assets
+- Liabilities
+
+Open a detailed breakdown of the supporting records.
+
+### 4.2 DRILL-DOWN STRUCTURE
+
+Use this hierarchy:
+
+DASHBOARD KPI
+↓
+ACCOUNT CATEGORY
+↓
+LEDGER GROUP
+↓
+LEDGER
+↓
+VOUCHER LIST
+↓
+COMPLETE VOUCHER DETAILS
+
+### 4.3 LEDGER DETAIL
+
+Show:
+
+- Ledger name
+- Parent group
+- Opening balance
+- Total debits
+- Total credits
+- Closing balance
+- Transaction count
+- Monthly movements
+
+### 4.4 VOUCHER DETAIL
+
+Show:
+
+- Voucher date
+- Voucher number
+- Voucher type
+- Party
+- Narration
+- Ledger entries
+- Debit amounts
+- Credit amounts
+- GST entries
+- Inventory details, if provided
+- Source XML/Excel filename
+- Original source record identifier
+
+For each voucher, display the complete accounting entry rather than only the sales or expense line.
+
+### 4.5 INTERACTIVE CONTROLS
+
+Add:
+
+- Search
+- Sort
+- Date filters
+- Amount filters
+- Voucher-type filters
+- Ledger filters
+- Export selected transactions
+
+### 4.6 AUDIT TRAIL
+
+Preserve an internal data lineage record linking each calculated figure to the imported source.
+
+Show calculation explanations such as:
+
+Net Sales = Eligible Sales Credits − Sales Returns and Adjustments.
+
+The exact formula must be based on validated account mappings and must avoid including tax liabilities as revenue.
+
+---
+
+# MODULE 5 — AUTOMATIC MONTHLY MIS REPORT
+
+Create a module named:
+
+MANAGEMENT INFORMATION REPORT
+
+### 5.1 REPORT GENERATOR
+
+Allow the user to select:
+
+- Reporting month
+- Financial year
+- Comparative period
+- Report sections
+- Currency display format
+
+Provide the button:
+
+GENERATE MIS REPORT
+
+### 5.2 MIS REPORT CONTENTS
+
+Prepare a professional management report containing:
+
+PAGE 1 — COVER PAGE
+
+GSPU Financial Analytics
+
+Management Information Report
+
+Company name
+
+Reporting period
+
+Date generated
+
+PAGE 2 — EXECUTIVE FINANCIAL SUMMARY
+
+- Revenue
+- Gross profit
+- Net profit
+- EBITDA
+- Cash and bank
+- Receivables
+- Payables
+- Working capital
+
+PAGE 3 — PROFITABILITY ANALYSIS
+
+- Profit and Loss summary
+- Monthly performance
+- Profit margins
+- Expense structure
+
+PAGE 4 — BALANCE SHEET ANALYSIS
+
+- Assets
+- Liabilities
+- Equity
+- Liquidity position
+
+PAGE 5 — SALES AND PURCHASE ANALYSIS
+
+- Revenue movement
+- Purchase movement
+- Major customers
+- Major suppliers
+
+PAGE 6 — RECEIVABLES AND PAYABLES
+
+- Outstanding balances
+- Overdue analysis
+- Collection priorities
+
+PAGE 7 — FINANCIAL RATIOS
+
+- Liquidity
+- Profitability
+- Efficiency
+- Solvency
+
+PAGE 8 — ACCOUNTING EXCEPTIONS
+
+- High-priority issues
+- Reconciliation differences
+- Missing information
+- Pending review items
+
+PAGE 9 — MANAGEMENT INSIGHTS
+
+Provide calculated observations and material financial changes.
+
+PAGE 10 — DATA SOURCES AND LIMITATIONS
+
+List the accounting files used, reporting periods, reconciliation status and missing data.
+
+Omit unsupported report sections or mark them clearly as unavailable.
+
+### 5.3 EXPORT FORMATS
+
+Support:
+
+- PDF
+- XLSX
+- Print-friendly HTML
+
+Use a professional report layout with the GSPU logo and consistent navy, teal, blue and green colours.
+
+Support page numbering, report generation date, company name and reporting period.
+
+Do not place invented accounting numbers into exported reports.
+
+---
+
+# MODULE 6 — FINANCIAL RATIO ANALYSIS
+
+Create a section named:
+
+FINANCIAL RATIO ANALYSIS
+
+Divide the ratios into four categories.
+
+### 6.1 LIQUIDITY RATIOS
+
+Current Ratio:
+
+Current Assets / Current Liabilities
+
+Quick Ratio:
+
+(Current Assets − Inventory − Other Non-Quick Current Assets) / Current Liabilities
+
+Cash Ratio:
+
+Cash and Cash Equivalents / Current Liabilities
+
+Working Capital:
+
+Current Assets − Current Liabilities
+
+### 6.2 PROFITABILITY RATIOS
+
+Gross Profit Margin:
+
+Gross Profit / Net Revenue × 100
+
+Net Profit Margin:
+
+Net Profit / Net Revenue × 100
+
+Operating Profit Margin:
+
+Operating Profit / Net Revenue × 100
+
+Return on Equity:
+
+Profit After Tax / Average Equity × 100
+
+Return on Capital Employed:
+
+EBIT / Average Capital Employed × 100
+
+### 6.3 EFFICIENCY RATIOS
+
+Inventory Turnover:
+
+Cost of Goods Sold / Average Inventory
+
+Receivables Turnover:
+
+Net Credit Sales / Average Trade Receivables
+
+Payables Turnover:
+
+Credit Purchases / Average Trade Payables
+
+Debtor Collection Period:
+
+Average Trade Receivables / Net Credit Sales × Days in Period
+
+Creditor Payment Period:
+
+Average Trade Payables / Credit Purchases × Days in Period
+
+### 6.4 SOLVENCY RATIOS
+
+Debt Equity Ratio:
+
+Interest-Bearing Borrowings / Equity
+
+Interest Coverage Ratio:
+
+EBIT / Finance Costs attributable to interest
+
+Debt Service Coverage Ratio:
+
+Calculate only when debt-service schedules and a defined cash-available-for-debt-service measure are supplied.
+
+Do not derive DSCR from balance sheet totals alone.
+
+### 6.5 REQUIREMENTS
+
+- Provide a documented numerator and denominator.
+- Show the exact underlying account mapping.
+- Use period-average balances where appropriate.
+- Handle zero and negative denominators explicitly.
+- Allow accounting policy and ratio-definition configuration.
+- Show current and prior-period values.
+- Highlight material changes.
+- Allow monthly and annual ratio charts.
+- Explain unusual movements with supporting data.
+
+Do not assume every business or industry uses identical definitions.
+
+---
+
+# MODULE 7 — GST RECONCILIATION
+
+Create a separate section named:
+
+GST RECONCILIATION
+
+This module must use actual uploaded GST return files and Tally accounting data.
+
+### 7.1 GST FILE UPLOAD
+
+Inside the GST module, provide an additional upload component.
+
+Support:
+
+- GSTR-1 files in supported Excel/CSV/JSON formats
+- GSTR-2B Excel/JSON
+- GSTR-3B data using supported downloads or mapped templates
+- Tally GST sales registers
+- Tally GST purchase registers
+- Tally GST ledgers
+- Debit note and credit note registers
+
+Do not assume all GST portal exports use identical formats.
+
+Provide version-aware import adapters and a manual template-mapping fallback.
+
+### 7.2 GST DATA NORMALISATION
+
+Extract, where available:
+
+- GSTIN
+- Supplier/customer name
+- Invoice number
+- Invoice date
+- Taxable value
+- Tax rate
+- IGST
+- CGST
+- SGST
+- Cess
+- Credit note/debit note details
+- Return period
+- Supply type
+- Place of supply
+- Reverse charge indicator
+- ITC eligibility fields
+
+### 7.3 RECONCILIATION A — TALLY SALES VS GSTR-1
+
+Compare:
+
+- Invoice numbers
+- Invoice dates
+- Taxable value
+- Tax amounts
+- Debit notes
+- Credit notes
+- Return periods
+- B2B/B2C classifications, where available
+
+Identify:
+
+- Tally invoices missing in GSTR-1
+- GSTR-1 invoices missing in Tally
+- Taxable value differences
+- Tax differences
+- Duplicate invoice references
+- Incorrect GSTIN
+- Period mismatches
+
+### 7.4 RECONCILIATION B — TALLY PURCHASES VS GSTR-2B
+
+Compare:
+
+- Supplier GSTIN
+- Invoice number
+- Invoice date
+- Taxable value
+- IGST
+- CGST
+- SGST
+- Cess
+
+Identify:
+
+- Books invoices missing in GSTR-2B
+- GSTR-2B invoices missing in books
+- Tax differences
+- Invoice number mismatches
+- GSTIN mismatches
+- Credit note differences
+- Duplicate entries
+- Different reporting periods
+
+Support configurable invoice-number normalisation and tolerance-based matching.
+
+Do not treat a record's appearance in GSTR-2B as conclusive evidence of ITC eligibility.
+
+### 7.5 RECONCILIATION C — GSTR-1 VS GSTR-3B
+
+Compare relevant outward tax liability figures, using applicable return tables and classifications.
+
+Display differences separately for:
+
+- Taxable value
+- IGST
+- CGST
+- SGST
+- Cess
+
+Distinguish timing differences, credit notes, amendments and other adjustments where data supports classification.
+
+### 7.6 RECONCILIATION D — ITC VS GSTR-3B
+
+Compare book ITC, GSTR-2B figures and available GSTR-3B ITC table data.
+
+Support:
+
+- Eligible ITC
+- Ineligible ITC
+- Reversed ITC
+- Reclaimed ITC
+- RCM-related ITC
+- Prior-period adjustments
+
+Create configurable tax treatment mappings and period-specific rule settings.
+
+Do not automatically declare an ITC amount legally eligible or ineligible without sufficient tax facts.
+
+### 7.7 GST DASHBOARD
+
+Summary cards:
+
+- Taxable outward supplies
+- Output GST
+- Input GST
+- Book ITC
+- GSTR-2B ITC
+- GSTR-3B ITC claimed
+- Reconciliation difference
+- Unmatched invoices
+
+Charts:
+
+- Monthly output GST
+- Monthly input GST
+- ITC mismatch trend
+- Tax liability comparisons
+- Supplier mismatch analysis
+
+### 7.8 GST MATCHING ENGINE
+
+Support:
+
+1. Exact matches
+2. Normalised matches
+3. Tolerance-based matches
+4. Probable matches requiring review
+5. Unmatched transactions
+
+Never automatically accept fuzzy matches as confirmed without adequate evidence.
+
+Maintain one-to-one or explicitly modelled many-to-one matching to prevent an invoice from being matched multiple times.
+
+### 7.9 GST EXPORTS
+
+Allow downloading:
+
+- Sales reconciliation
+- Purchase reconciliation
+- GSTR-1 vs GSTR-3B comparison
+- GSTR-2B vs Books comparison
+- ITC summary
+- Unmatched invoice list
+- GST exception report
+
+The GST module must operate locally without requiring GST portal login, scraping or external API integration.
+
+---
+
+# MODULE 8 — AUTOMATED FINANCIAL INSIGHTS
+
+Create a section named:
+
+FINANCIAL INSIGHTS
+
+The objective is to automatically explain significant financial changes using actual calculated results.
+
+### 8.1 DETERMINISTIC INSIGHT GENERATION
+
+Do not call Gemini or any paid LLM API.
+
+Build a rules-based narrative engine using financial metrics already calculated within the application.
+
+### 8.2 EXAMPLE OBSERVATIONS
+
+Revenue:
+
+"Revenue increased by 14.2% compared with the previous financial year."
+
+Profitability:
+
+"Gross profit margin declined by 2.4 percentage points."
+
+Expenses:
+
+"Administrative expenses increased faster than revenue during the selected period."
+
+Working capital:
+
+"Trade receivables increased while revenue remained relatively stable."
+
+Liquidity:
+
+"The current ratio declined compared with the previous period."
+
+GST:
+
+"Input tax credit in the books exceeds the corresponding GSTR-2B amount by the calculated difference."
+
+Generate such statements only when the actual uploaded data supports the figures and comparison.
+
+### 8.3 INSIGHT CLASSIFICATION
+
+Categorise insights into:
+
+- Revenue performance
+- Profitability
+- Cost control
+- Working capital
+- Liquidity
+- Financial risk
+- Accounting exceptions
+- GST discrepancies
+
+### 8.4 INSIGHT PRIORITY
+
+Classify observations as:
+
+- Positive development
+- Attention required
+- Significant risk indicator
+- Informational
+
+Use configurable materiality and threshold settings.
+
+### 8.5 EVIDENCE AND EXPLANATION
+
+Every financial insight should show:
+
+- Current value
+- Comparative value
+- Absolute movement
+- Percentage movement
+- Formula or rule
+- Supporting ledger/report
+- Source file
+- View supporting records
+
+Distinguish calculated observations from hypotheses.
+
+Do not assert that a numerical movement was caused by operational factors unless supporting information proves that conclusion.
+
+### 8.6 EXPORT
+
+Include relevant insights in the automatic MIS report.
+
+---
+
+# PART C — APPLICATION USER INTERFACE
+
+Maintain the original uploaded GSPU logo without changing its colours, geometry or proportions.
+
+Use a premium professional financial dashboard design.
+
+### BRAND COLOURS
+
+- Dark navy: #0B2540
+- Primary blue: #0875BC
+- Teal: #0F9B91
+- Green: #50AE5D
+- White: #FFFFFF
+- Light background: #F4F7FB
+
+These are suggested interface colours; the logo itself must remain unchanged.
+
+### SIDEBAR NAVIGATION
+
+1. Executive Overview
+2. Upload XML / Excel
+3. Uploaded Data
+4. Sales Analytics
+5. Purchase Analytics
+6. Profit & Loss
+7. Balance Sheet
+8. Receivables & Payables
+9. Financial Ratios
+10. Accounting Health Check
+11. Comparative Financials
+12. GST Reconciliation
+13. Financial Insights
+14. MIS Reports
+
+The navigation does not require separate browser routes if a simple single-page application with internal tabs is easier.
+
+### COMMON DASHBOARD HEADER
+
+Display:
+
+- GSPU logo
+- Company name
+- Selected financial year
+- Reporting period
+- Data validation status
+- Add More Files button
+- Update Dashboard button
+- Export button
+
+Do not display meaningless demo growth percentages when previous-period data is absent.
+
+### DASHBOARD DESIGN
+
+Use:
+
+- Professional KPI cards
+- Interactive Recharts charts
+- Searchable tables
+- Collapsible financial statements
+- Drawer panels for drill-down
+- Date-range filters
+- Clear reconciliation status indicators
+- Responsive layouts for desktop and mobile
+
+Use Indian number formatting:
+
+₹1,25,000
+
+₹12.50 lakh
+
+₹1.25 crore
+
+Retain full numerical precision in financial calculations and downloadable reports.
+
+---
+
+# PART D — LOCAL DATA STORAGE AND SECURITY
+
+The first version must remain free and browser-based.
+
+Use:
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Recharts
+- Excel parsing libraries
+- Safe XML parsing
+- Decimal-safe accounting calculations
+- Web Workers for heavy processing
+- Browser-compatible PDF/XLSX export libraries
+
+Do not require:
+
+- Firebase
+- Supabase
+- Paid Gemini APIs
+- Paid cloud databases
+- Server-side Python
+- External data processing services
+
+### PRIVACY
+
+Never transmit uploaded financial files or parsed accounting records to a remote AI service.
+
+No external analytics service should receive accounting information.
+
+Prefer in-memory processing.
+
+Provide:
+
+- Clear All Data
+- Remove Uploaded File
+- Replace File
+- Export Analysis
+
+Optionally support exporting an encrypted local project file for later reopening, with appropriate password-based encryption.
+
+Avoid persisting confidential financial data unencrypted by default.
+
+The application must not claim to provide production-grade multi-user access controls because it has no authentication backend.
+
+---
+
+# PART E — ENGINEERING AND TESTING REQUIREMENTS
+
+### E1. MODULAR ARCHITECTURE
+
+Create separate implementation modules for:
+
+- Tally XML parser
+- Excel parser
+- GST data parser
+- Data normalisation
+- Ledger mapping
+- Voucher reconciliation
+- Accounting calculation engine
+- Ageing calculation engine
+- Ratio calculation engine
+- GST matching engine
+- Audit exception rules
+- Financial insight generator
+- Report export engine
+- UI components
+
+Avoid placing all application logic inside a single React component.
+
+### E2. TEST DATA
+
+Create a clearly labelled DEMO dataset for development and testing.
+
+Demo data must never mix with actual uploaded client information.
+
+### E3. AUTOMATED TESTS
+
+Provide tests for:
+
+- Balanced and unbalanced vouchers
+- Debit/credit signs
+- Opening balances
+- Multi-file upload
+- Duplicate file detection
+- Duplicate voucher detection
+- Sales returns
+- Purchase returns
+- GST ledger accounting
+- GST invoice matching
+- Credit notes and debit notes
+- Partially paid invoices
+- Debtor ageing
+- Creditor ageing
+- Negative cash balances
+- Monthly P&L
+- Comparative P&L
+- Balance Sheet reconciliation
+- Financial ratios
+- Missing information
+- Division by zero
+- Large XML files
+- Malformed XML
+- Invalid dates
+- Multiple company detection
+- Inconsistent reporting periods
+
+### E4. ACCEPTANCE TESTS
+
+The upgrade is complete only when:
+
+1. I can enter one company name.
+
+2. I can upload several XML and Excel files in different upload sessions.
+
+3. The original uploaded files remain listed.
+
+4. I can preview actual parsed records.
+
+5. I can click VIEW DASHBOARD.
+
+6. The dashboard displays calculations based on real uploaded accounting data.
+
+7. I can click financial figures to inspect ledger and voucher details.
+
+8. I can view debtor and creditor ageing where bill-level data exists.
+
+9. I can compare monthly and annual financial statements.
+
+10. I can open Accounting Health Check and inspect detected exceptions.
+
+11. I can upload GST returns and reconcile them with relevant Tally records.
+
+12. I can generate financial ratios with transparent calculations.
+
+13. I can view automated financial insights supported by calculations.
+
+14. I can export professional MIS and reconciliation reports.
+
+15. I can add additional files and update the dashboard without double-counting.
+
+16. No external paid API is required.
+
+17. No login or portal exists.
+
+18. The application builds successfully as a static Vite site suitable for Cloudflare Pages.
+
+19. The app reports insufficient data rather than fabricating financial figures.
+
+20. The app passes the available accounting calculation and reconciliation tests.
+
+---
+
+# PART F — IMPLEMENTATION ORDER
+
+Implement upgrades in the following order:
+
+PHASE 1 — DATA FOUNDATION
+
+- Preserve existing application.
+- Stabilise XML and Excel import.
+- Add normalised accounting data model.
+- Implement deduplication and reconciliation.
+- Add source traceability.
+
+PHASE 2 — FINANCIAL ANALYTICS
+
+- Ledger drill-down.
+- Voucher drill-down.
+- Debtors and creditors ageing.
+- Comparative financial statements.
+- Financial ratios.
+
+PHASE 3 — AUDIT INTELLIGENCE
+
+- Accounting Health Check.
+- Audit exceptions.
+- Financial insights.
+
+PHASE 4 — GST ANALYTICS
+
+- GST return upload.
+- GSTR-1 reconciliation.
+- GSTR-2B reconciliation.
+- GSTR-3B comparison.
+- Tax exception reporting.
+
+PHASE 5 — MANAGEMENT REPORTING
+
+- Monthly MIS.
+- PDF exports.
+- Excel reports.
+- Integrated financial insights.
+- Final UI refinement.
+
+After each phase, check that existing features still work.
+
+Do not replace existing functioning modules with static designs.
+
+When encountering an unsupported Tally export structure, implement an extensible parser or mapping workflow rather than silently dropping records.
+
+---
+
+# FINAL INSTRUCTION TO GOOGLE AI STUDIO
+
+Implement all the above modules as functional additions to my existing GSPU Financial Analytics application.
+
+The final result must be an integrated financial analysis system driven by actual uploaded TallyPrime XML, Excel and GST data.
+
+Prioritise:
+
+1. Accounting accuracy
+2. Reliable XML and Excel extraction
+3. Source reconciliation
+4. Data privacy
+5. Interactive drill-down
+6. Professional dashboards
+7. Management reporting
+8. Free browser-based operation
+
+Preserve the simple core workflow:
+
+ENTER COMPANY NAME
+→ UPLOAD MULTIPLE XML / EXCEL FILES
+→ REVIEW UPLOADED DATA
+→ CLICK VIEW DASHBOARD
+→ ANALYSE FINANCIAL INFORMATION
+→ GENERATE MIS / GST / AUDIT REPORTS
+
+No client portal.
+No admin portal.
+No login.
+No mandatory paid services.
+
+The application must function with genuine accounting records, not merely display attractive demonstration screens.
+
+Begin by inspecting the existing codebase, identify reusable components, then implement the upgrades incrementally without destroying existing functionality.
